@@ -21,6 +21,8 @@ module dotNeTS {
         ToArray(): TSource[];
         ToList(): IList<TSource>;
         Unique<TResult>(callback: IFunc<TSource, TResult>): Array<TResult>;
+        Aggregate<TResult>(callback: IAgreggateFunc<TSource, TResult>): TResult;
+
 
     }
 }

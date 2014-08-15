@@ -1,10 +1,9 @@
 ﻿'use strict';
 var getTimestamp, timesToRunTimeTests = 1;
-
 if (window.performance.now) {
     getTimestamp = function () { return window.performance.now(); };
 }
-var timeWatch = function (operation, numberOfTimes,name?) {
+var timeWatch = function (operation, numberOfTimes, name?) {
     var t1 = getTimestamp(), res;
     for (var i = 0; i < numberOfTimes; i ++) {
         operation();
@@ -364,64 +363,69 @@ describe('Test of List-implementation', function () {
         expect(list.ElementAt(1).id).toBe(1);
         expect(list.Count()).toBe(4);
     });
-    it('Group By With String', function () {
-        timeWatch(function () {
-            var harvestData = getFilledHarvestList();
-            var grouping = harvestData.GroupBy(b => b.MName);
-            var firstGroup = grouping.Where(b => b.Key === 'Upplands Väsby').FirstOrDefault();
-            expect(firstGroup.Count()).toBe(152);
-        }, timesToRunTimeTests,'Group By With String');
+    it('Agregate', function () {
+        var list = getFilledList();
+        var a = list.Select(b => b.firstName).Aggregate((current, next) => current + ", " + next);
+        console.log(a);
     });
-    it('Group By String (optimized)', function () {
-        timeWatch(function () {
-            var harvestData = getFilledHarvestList();
-            var grouping = harvestData.GroupByStringKey(b => b.MName);
-            var firstGroup = grouping.Where(b => b.Key === 'Upplands Väsby').FirstOrDefault();
-            expect(firstGroup.Count()).toBe(152);
-        }, timesToRunTimeTests,'Group By String (optimized)');
-    });
-    it('Group By With Number', function () {
-        timeWatch(function () {
-            var harvestData = getFilledHarvestList();
-            var grouping = harvestData.GroupBy(b => b.MCode);
-            var firstGroup = grouping.Where(b => b.Key === 114).FirstOrDefault();
-            expect(firstGroup.Count()).toBe(152);
-        }, timesToRunTimeTests,'Group By With Number');
+    //it('Group By With String', function () {
+    //    timeWatch(function () {
+    //        var harvestData = getFilledHarvestList();
+    //        var grouping = harvestData.GroupBy(b => b.MName);
+    //        var firstGroup = grouping.Where(b => b.Key === 'Upplands Väsby').FirstOrDefault();
+    //        expect(firstGroup.Count()).toBe(152);
+    //    }, timesToRunTimeTests,'Group By With String');
+    //});
+    //it('Group By String (optimized)', function () {
+    //    timeWatch(function () {
+    //        var harvestData = getFilledHarvestList();
+    //        var grouping = harvestData.GroupByStringKey(b => b.MName);
+    //        var firstGroup = grouping.Where(b => b.Key === 'Upplands Väsby').FirstOrDefault();
+    //        expect(firstGroup.Count()).toBe(152);
+    //    }, timesToRunTimeTests,'Group By String (optimized)');
+    //});
+    //it('Group By With Number', function () {
+    //    timeWatch(function () {
+    //        var harvestData = getFilledHarvestList();
+    //        var grouping = harvestData.GroupBy(b => b.MCode);
+    //        var firstGroup = grouping.Where(b => b.Key === 114).FirstOrDefault();
+    //        expect(firstGroup.Count()).toBe(152);
+    //    }, timesToRunTimeTests,'Group By With Number');
 
-    });
+    //});
 
-    it('Group By Number (optimized)', function () {
-        timeWatch(function () {
-            var harvestData = getFilledHarvestList();
-            var grouping = harvestData.GroupByNumberKey(b => b.MCode);
-            var firstGroup = grouping.Where(b => b.Key === 114).FirstOrDefault();
-            expect(firstGroup.Count()).toBe(152);
-        }, timesToRunTimeTests,'Group By Number (optimized)');
-    });
+    //it('Group By Number (optimized)', function () {
+    //    timeWatch(function () {
+    //        var harvestData = getFilledHarvestList();
+    //        var grouping = harvestData.GroupByNumberKey(b => b.MCode);
+    //        var firstGroup = grouping.Where(b => b.Key === 114).FirstOrDefault();
+    //        expect(firstGroup.Count()).toBe(152);
+    //    }, timesToRunTimeTests,'Group By Number (optimized)');
+    //});
 
-    it('Group By object', function () {
-        var list = getFilledHarvestList();
-        var grouping = list.GroupBy((harvest) => {
-            return {
-                MyName: harvest.MName,
-                QInfo: {
-                    Q: harvest.Quantity
-                }
-            }
-        });
-        expect(grouping.Count()).toBe(3);
+    //it('Group By object', function () {
+    //    var list = getFilledHarvestList();
+    //    var grouping = list.GroupBy((harvest) => {
+    //        return {
+    //            MyName: harvest.MName,
+    //            QInfo: {
+    //                Q: harvest.Quantity
+    //            }
+    //        }
+    //    });
+    //    expect(grouping.Count()).toBe(290);
 
 
-        //var grouping2 = list.GroupBy((harvest) => {
-        //    return {
-        //        MyName: harvest.MName,
-        //        QInfo: {
-        //            Q: harvest.Quantity
-        //        }
-        //    }
-        //});
+    //    //var grouping2 = list.GroupBy((harvest) => {
+    //    //    return {
+    //    //        MyName: harvest.MName,
+    //    //        QInfo: {
+    //    //            Q: harvest.Quantity
+    //    //        }
+    //    //    }
+    //    //});
 
-    });
+    //});
 
 
 });

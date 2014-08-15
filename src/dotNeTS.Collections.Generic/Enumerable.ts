@@ -57,6 +57,16 @@ module dotNeTS {
             return r;
 
         }
+        Aggregate<TResult>(callback: IAgreggateFunc<TSource, TResult>): TResult {
+            var aggregatedResult = null, res;
+            for (var i = 0; i < this.innerArray.length; i++) {
+                if (i > 0) {
+                    aggregatedResult = callback(aggregatedResult || this.innerArray[i - 1], this.innerArray[i], i, this.innerArray);
+                }
+            }
+            return aggregatedResult;
+
+        }
         GroupByNumberKey(callback: IFunc<TSource, number>): IEnumerable<IGrouping<number, TSource>> {
             var listOfGroupings = new List<Grouping<number, TSource>>();
             var grouped = _.groupBy(this.innerArray, callback);

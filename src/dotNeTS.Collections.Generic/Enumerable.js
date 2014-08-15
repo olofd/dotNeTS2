@@ -1,4 +1,4 @@
-/// <reference path="../../typings/lodash/lodash.d.ts" />
+﻿/// <reference path="../../typings/lodash/lodash.d.ts" />
 'use strict';
 var dotNeTS;
 (function (dotNeTS) {
@@ -59,6 +59,15 @@ var dotNeTS;
                 r.push(o[i]);
             }
             return r;
+        };
+        Enumerable.prototype.Aggregate = function (callback) {
+            var aggregatedResult = null, res;
+            for (var i = 0; i < this.innerArray.length; i++) {
+                if (i > 0) {
+                    aggregatedResult = callback(aggregatedResult || this.innerArray[i - 1], this.innerArray[i], i, this.innerArray);
+                }
+            }
+            return aggregatedResult;
         };
         Enumerable.prototype.GroupByNumberKey = function (callback) {
             var listOfGroupings = new dotNeTS.List();

@@ -18,6 +18,23 @@ var dotNeTS;
         return new dotNeTS.List(startArray);
     }
     dotNeTS.createList = createList;
+
+    var getTimestamp;
+    if (window.performance.now) {
+        getTimestamp = function () {
+            return window.performance.now();
+        };
+    }
+    function MeasureTime(operation, numberOfTimes, name) {
+        var t1 = getTimestamp(), res;
+        for (var i = 0; i < numberOfTimes; i++) {
+            operation();
+        }
+        var t2 = getTimestamp();
+
+        console.log("Time Operation: " + name + " ::  " + (t2 - t1));
+    }
+    dotNeTS.MeasureTime = MeasureTime;
 })(dotNeTS || (dotNeTS = {}));
 'use strict';
 var dotNeTS;
@@ -27,12 +44,12 @@ var dotNeTS;
             this.innerArray = innerArray || [];
         }
         Enumerable.prototype.getEvaluatedCollection = function () {
-            return this.EvaluateWhereExpressions();
+            return this.EvaluateExpressions();
         };
         Object.defineProperty(Enumerable.prototype, "innerArray", {
             get: function () {
                 if (!this.protectedInnerCollection) {
-                    this.innerArray = new Array();
+                    this.protectedInnerCollection = new Array();
                 }
                 return this.getEvaluatedCollection();
             },
@@ -42,26 +59,29 @@ var dotNeTS;
             enumerable: true,
             configurable: true
         });
+        Object.defineProperty(Enumerable.prototype, "length", {
+            get: function () {
+                if (!this.protectedInnerCollection) {
+                    this.protectedInnerCollection = new Array();
+                }
+                return this.protectedInnerCollection.length;
+            },
+            set: function (newLength) {
+                if (!this.protectedInnerCollection) {
+                    this.protectedInnerCollection = new Array();
+                }
+                this.protectedInnerCollection.length = newLength;
+            },
+            enumerable: true,
+            configurable: true
+        });
 
-        Enumerable.prototype.EvaluateWhereExpressions = function () {
+        Enumerable.prototype.EvaluateExpressions = function () {
             var _this = this;
-            if (this.whereExpressions) {
-                var newArray = new Array();
-                _.forEach(this.protectedInnerCollection, function (obj, index, array) {
-                    var shouldBeRemoved = false;
-                    for (var i = 0; i < _this.whereExpressions.length; i++) {
-                        var result = _this.whereExpressions[i](obj, index, array);
-                        if (!result) {
-                            shouldBeRemoved = true;
-                            break;
-                        }
-                    }
-                    if (!shouldBeRemoved) {
-                        newArray.push(obj);
-                    }
+            if (this.lazyExpressions) {
+                _.forEach(this.lazyExpressions, function (expression) {
+                    _this.protectedInnerCollection = dotNeTS.EnumerableExpressionDefenitions.ExcecuteExpression(_this.protectedInnerCollection, expression);
                 });
-
-                this.protectedInnerCollection = newArray;
             }
             return this.protectedInnerCollection;
         };
@@ -76,6 +96,30 @@ var dotNeTS;
                 r.push(o[i]);
             }
             return r;
+        };
+        Enumerable.prototype.Aggregate = function (callback) {
+            var aggregatedResult = null;
+            for (var i = 0; i < this.innerArray.length; i++) {
+                var next;
+                var current = this.innerArray[i];
+                if (i < this.innerArray.length) {
+                    next = this.innerArray[i + 1];
+                }
+                var res;
+                if (next) {
+                    res = callback(current, next, i, this.innerArray);
+                } else {
+                    res = current;
+                }
+                if (res) {
+                    if (aggregatedResult === null) {
+                        aggregatedResult = res;
+                    } else {
+                        aggregatedResult += res;
+                    }
+                }
+            }
+            return aggregatedResult;
         };
         Enumerable.prototype.GroupByNumberKey = function (callback) {
             var listOfGroupings = new dotNeTS.List();
@@ -98,11 +142,22 @@ var dotNeTS;
             this.ForEach(function (item, index, col) {
                 var resultFound = false;
                 var result = callback(item, index, col);
+
                 listOfGroupings.ForEach(function (innerItem, innerIndex, innerCol) {
-                    if (innerItem.Key === result) {
-                        innerItem.Add(item);
-                        resultFound = true;
-                        return false;
+                    if (typeof result === 'object' && typeof innerItem === 'object') {
+                        _.forEach(result, function (groupResultValue, groupResultKey, col) {
+                            if (innerItem.Key[groupResultKey] === groupResultValue) {
+                                innerItem.Add(item);
+                                resultFound = true;
+                                return false;
+                            }
+                        });
+                    } else {
+                        if (innerItem && innerItem.Key === result) {
+                            innerItem.Add(item);
+                            resultFound = true;
+                            return false;
+                        }
                     }
                 });
                 if (!resultFound) {
@@ -133,11 +188,13 @@ var dotNeTS;
         };
         Enumerable.prototype.OrderBy = function (keySelector) {
             var ordered = new dotNeTS.OrderedEnumerable(this);
+            this.CopyExpressions(ordered);
             return ordered.OrderBy(keySelector);
         };
 
         Enumerable.prototype.OrderByDecending = function (callback) {
             var ordered = new dotNeTS.OrderedEnumerable(this);
+            this.CopyExpressions(ordered);
             return ordered.OrderByDecending(callback);
         };
         Enumerable.prototype.First = function (predicate) {
@@ -224,16 +281,21 @@ var dotNeTS;
         };
 
         Enumerable.prototype.Where = function (predicate) {
-            var newEnum = new Enumerable(this.protectedInnerCollection);
-            newEnum.whereExpressions = new Array();
-            _.forEach(this.whereExpressions, function (exp) {
-                newEnum.whereExpressions.push(exp);
+            return this.CopyExpressions(new Enumerable(this.protectedInnerCollection), {
+                func: predicate,
+                type: 0 /* Where */
             });
-            newEnum.whereExpressions.push(predicate);
-            return newEnum;
         };
-        Enumerable.prototype.WhereOld = function (predicate) {
-            return new Enumerable(_.where(this.innerArray, predicate));
+
+        Enumerable.prototype.CopyExpressions = function (enumerable, lastExpression) {
+            enumerable.lazyExpressions = new Array();
+            _.forEach(this.lazyExpressions, function (exp) {
+                enumerable.lazyExpressions.push(exp);
+            });
+            if (lastExpression) {
+                enumerable.lazyExpressions.push(lastExpression);
+            }
+            return enumerable;
         };
 
         Enumerable.prototype.ToArray = function () {
@@ -245,11 +307,42 @@ var dotNeTS;
         };
 
         Enumerable.prototype.Dispose = function () {
+            this.lazyExpressions = undefined;
             this.protectedInnerCollection = undefined;
         };
         return Enumerable;
     })();
     dotNeTS.Enumerable = Enumerable;
+})(dotNeTS || (dotNeTS = {}));
+var dotNeTS;
+(function (dotNeTS) {
+    var EnumerableExpressionDefenitions = (function () {
+        function EnumerableExpressionDefenitions() {
+        }
+        EnumerableExpressionDefenitions.ExcecuteExpression = function (array, exp) {
+            switch (exp.type) {
+                case 0 /* Where */:
+                    return EnumerableExpressionDefenitions.Where(array, exp.func);
+            }
+
+            return null;
+        };
+
+        EnumerableExpressionDefenitions.Where = function (array, exp) {
+            return _.where(array, exp);
+        };
+        return EnumerableExpressionDefenitions;
+    })();
+    dotNeTS.EnumerableExpressionDefenitions = EnumerableExpressionDefenitions;
+})(dotNeTS || (dotNeTS = {}));
+var dotNeTS;
+(function (dotNeTS) {
+    (function (IExpressionType) {
+        IExpressionType[IExpressionType["Where"] = 0] = "Where";
+        IExpressionType[IExpressionType["Select"] = 1] = "Select";
+        IExpressionType[IExpressionType["FirstOrDefault"] = 2] = "FirstOrDefault";
+    })(dotNeTS.IExpressionType || (dotNeTS.IExpressionType = {}));
+    var IExpressionType = dotNeTS.IExpressionType;
 })(dotNeTS || (dotNeTS = {}));
 var __extends = this.__extends || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -333,10 +426,8 @@ var dotNeTS;
             _super.call(this, parent.protectedInnerCollection);
         }
         OrderedEnumerable.prototype.getEvaluatedCollection = function () {
-            if (this.sortExpressions) {
-                return this.EvaluateOrderBy();
-            }
-            return this.protectedInnerCollection;
+            _super.prototype.getEvaluatedCollection.call(this);
+            return this.EvaluateOrderBy();
         };
         OrderedEnumerable.prototype.AddLazyOrderInternal = function (callback, sortOrder) {
             if (!this.sortExpressions) {
@@ -371,23 +462,25 @@ var dotNeTS;
         };
         OrderedEnumerable.prototype.EvaluateOrderBy = function () {
             var _this = this;
-            this.protectedInnerCollection.sort(function (e1, e2) {
-                var sortReturn = 0;
-                _.forEach(_this.sortExpressions, function (exp) {
-                    var order = exp.sortOrder;
-                    var e1Exp = exp.expression.call(this, e1);
-                    var e2Exp = exp.expression.call(this, e2);
-                    if (e1Exp > e2Exp) {
-                        sortReturn = order === 0 /* ASC */ ? 1 : -1;
-                        return false;
-                    }
-                    if (e1Exp < e2Exp) {
-                        sortReturn = order === 0 /* ASC */ ? -1 : 1;
-                        return false;
-                    }
+            if (this.sortExpressions) {
+                this.protectedInnerCollection.sort(function (e1, e2) {
+                    var sortReturn = 0;
+                    _.forEach(_this.sortExpressions, function (exp) {
+                        var order = exp.sortOrder;
+                        var e1Exp = exp.expression.call(this, e1);
+                        var e2Exp = exp.expression.call(this, e2);
+                        if (e1Exp > e2Exp) {
+                            sortReturn = order === 0 /* ASC */ ? 1 : -1;
+                            return false;
+                        }
+                        if (e1Exp < e2Exp) {
+                            sortReturn = order === 0 /* ASC */ ? -1 : 1;
+                            return false;
+                        }
+                    });
+                    return sortReturn;
                 });
-                return sortReturn;
-            });
+            }
             return this.protectedInnerCollection;
         };
         OrderedEnumerable.prototype.Dispose = function () {

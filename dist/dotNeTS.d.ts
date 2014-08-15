@@ -11,16 +11,19 @@ declare module dotNeTS {
 }
 declare module dotNeTS {
     function createList<T>(startArray?: T[]): List<T>;
+    function MeasureTime(operation: any, numberOfTimes: any, name?: any): void;
 }
 declare module dotNeTS {
     class Enumerable<TSource> implements IEnumerable<TSource> {
         public protectedInnerCollection: TSource[];
-        private whereExpressions;
+        public lazyExpressions: IExpressionFunc[];
         constructor(innerArray?: TSource[]);
         public getEvaluatedCollection(): TSource[];
         public innerArray : TSource[];
-        private EvaluateWhereExpressions();
+        public length : number;
+        private EvaluateExpressions();
         public Unique(callback: IFunc<TSource, string>): TSource[];
+        public Aggregate<TResult>(callback: IFunc<TSource, TResult>): TResult;
         public GroupByNumberKey(callback: IFunc<TSource, number>): IEnumerable<IGrouping<number, TSource>>;
         public GroupByStringKey(callback: IFunc<TSource, string>): IEnumerable<IGrouping<string, TSource>>;
         public GroupBy<TResult>(callback: IFunc<TSource, TResult>): IEnumerable<IGrouping<TResult, TSource>>;
@@ -38,10 +41,29 @@ declare module dotNeTS {
         public Count(predicate?: IFunc<TSource, boolean>): number;
         public Select<TResult>(callback: IFunc<TSource, TResult>): IEnumerable<TResult>;
         public Where(predicate: IFunc<TSource, boolean>): IEnumerable<TSource>;
-        public WhereOld(predicate: IFunc<TSource, boolean>): IEnumerable<TSource>;
+        private CopyExpressions<TResult>(enumerable, lastExpression?);
         public ToArray(): TSource[];
         public ToList(): IList<TSource>;
         public Dispose(): void;
+    }
+}
+declare module dotNeTS {
+    class EnumerableExpressionDefenitions<TSource> {
+        static ExcecuteExpression<TSource>(array: TSource[], exp: IExpressionFunc): TSource[];
+        static Where<TSource>(array: TSource[], exp: IFunc<TSource, boolean>): TSource[];
+    }
+}
+declare module dotNeTS {
+    interface IExpressionFunc {
+        func: IFunc<any, any>;
+        type: IExpressionType;
+    }
+}
+declare module dotNeTS {
+    enum IExpressionType {
+        Where = 0,
+        Select = 1,
+        FirstOrDefault = 2,
     }
 }
 declare module dotNeTS {
@@ -61,6 +83,8 @@ declare module dotNeTS {
 declare module dotNeTS {
     interface IEnumerable<TSource> extends IDisposable {
         innerArray: TSource[];
+        length: number;
+        lazyExpressions: IExpressionFunc[];
         ForEach(callback: IFunc<TSource, void>): void;
         Contains(item: TSource): boolean;
         GroupBy<TResult>(callback: IFunc<TSource, TResult>): IEnumerable<IGrouping<TResult, TSource>>;
@@ -76,7 +100,6 @@ declare module dotNeTS {
         Count(predicate?: IFunc<TSource, boolean>): number;
         Select<TResult>(callback: IFunc<TSource, TResult>): IEnumerable<TResult>;
         Where(predicate?: IFunc<TSource, boolean>): IEnumerable<TSource>;
-        WhereOld(predicate?: IFunc<TSource, boolean>): IEnumerable<TSource>;
         ToArray(): TSource[];
         ToList(): IList<TSource>;
         Unique<TResult>(callback: IFunc<TSource, TResult>): TResult[];
@@ -151,6 +174,12 @@ declare module dotNeTS {
     }
 }
 declare module dotNeTS {
+    interface IFunc<T, TResult> {
+        (value: T, index: number, list: T[]): TResult;
+    }
+    interface IFunc<T, TResult> {
+        (value: T, value2: T, index: number, list: T[]): TResult;
+    }
     interface IFunc<T, TResult> {
         (value: T, index: number, list: T[]): TResult;
     }
