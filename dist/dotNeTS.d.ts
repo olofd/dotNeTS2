@@ -23,7 +23,7 @@ declare module dotNeTS {
         public length : number;
         private EvaluateExpressions();
         public Unique(callback: IFunc<TSource, string>): TSource[];
-        public Aggregate<TResult>(callback: IFunc<TSource, TResult>): TResult;
+        public Aggregate<TResult>(callback: IAgreggateFunc<TSource, TResult>): TResult;
         public GroupByNumberKey(callback: IFunc<TSource, number>): IEnumerable<IGrouping<number, TSource>>;
         public GroupByStringKey(callback: IFunc<TSource, string>): IEnumerable<IGrouping<string, TSource>>;
         public GroupBy<TResult>(callback: IFunc<TSource, TResult>): IEnumerable<IGrouping<TResult, TSource>>;
@@ -103,6 +103,7 @@ declare module dotNeTS {
         ToArray(): TSource[];
         ToList(): IList<TSource>;
         Unique<TResult>(callback: IFunc<TSource, TResult>): TResult[];
+        Aggregate<TResult>(callback: IAgreggateFunc<TSource, TResult>): TResult;
     }
 }
 declare module dotNeTS {
@@ -177,7 +178,7 @@ declare module dotNeTS {
     interface IFunc<T, TResult> {
         (value: T, index: number, list: T[]): TResult;
     }
-    interface IFunc<T, TResult> {
+    interface IAgreggateFunc<T, TResult> {
         (value: T, value2: T, index: number, list: T[]): TResult;
     }
     interface IFunc<T, TResult> {

@@ -98,25 +98,10 @@ var dotNeTS;
             return r;
         };
         Enumerable.prototype.Aggregate = function (callback) {
-            var aggregatedResult = null;
+            var aggregatedResult = null, res;
             for (var i = 0; i < this.innerArray.length; i++) {
-                var next;
-                var current = this.innerArray[i];
-                if (i < this.innerArray.length) {
-                    next = this.innerArray[i + 1];
-                }
-                var res;
-                if (next) {
-                    res = callback(current, next, i, this.innerArray);
-                } else {
-                    res = current;
-                }
-                if (res) {
-                    if (aggregatedResult === null) {
-                        aggregatedResult = res;
-                    } else {
-                        aggregatedResult += res;
-                    }
+                if (i > 0) {
+                    aggregatedResult = callback(aggregatedResult || this.innerArray[i - 1], this.innerArray[i], i, this.innerArray);
                 }
             }
             return aggregatedResult;
