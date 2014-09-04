@@ -23,7 +23,7 @@ declare module dotNeTS {
         public length : number;
         private EvaluateExpressions();
         public Unique(callback: IFunc<TSource, string>): TSource[];
-        public Aggregate<TResult>(callback: IAgreggateFunc<TSource, TResult>): TResult;
+        public Aggregate(callback: IAgreggateFunc<TSource, TSource>): TSource;
         public GroupByNumberKey(callback: IFunc<TSource, number>): IEnumerable<IGrouping<number, TSource>>;
         public GroupByStringKey(callback: IFunc<TSource, string>): IEnumerable<IGrouping<string, TSource>>;
         public GroupBy<TResult>(callback: IFunc<TSource, TResult>): IEnumerable<IGrouping<TResult, TSource>>;
@@ -40,6 +40,7 @@ declare module dotNeTS {
         public Any(predicate?: IFunc<TSource, boolean>): boolean;
         public Count(predicate?: IFunc<TSource, boolean>): number;
         public Select<TResult>(callback: IFunc<TSource, TResult>): IEnumerable<TResult>;
+        public SelectMany<TResult>(callback: IFunc<TSource, TResult[]>): IEnumerable<TResult>;
         public Where(predicate: IFunc<TSource, boolean>): IEnumerable<TSource>;
         private CopyExpressions<TResult>(enumerable, lastExpression?);
         public ToArray(): TSource[];
@@ -104,6 +105,7 @@ declare module dotNeTS {
         ToList(): IList<TSource>;
         Unique<TResult>(callback: IFunc<TSource, TResult>): TResult[];
         Aggregate<TResult>(callback: IAgreggateFunc<TSource, TResult>): TResult;
+        SelectMany<TResult>(callback: IFunc<TSource, TResult[]>): IEnumerable<TResult>;
     }
 }
 declare module dotNeTS {

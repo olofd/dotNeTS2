@@ -365,7 +365,7 @@ describe('Test of List-implementation', function () {
         expect(list.ElementAt(1).id).toBe(1);
         expect(list.Count()).toBe(4);
     });
-    it('Agregate', function () {
+    it('Aggregate odd', function () {
         var list = getFilledList();
         var a = list.Select(function (b) {
             return b.firstName;
@@ -373,6 +373,41 @@ describe('Test of List-implementation', function () {
             return current + ", " + next;
         });
         console.log(a);
+    });
+    it('Aggregate even', function () {
+        var list = getFilledList();
+        list.Add(getFilledList().FirstOrDefault());
+        var a = list.Select(function (b) {
+            return b.firstName;
+        }).Aggregate(function (current, next) {
+            return current + ", " + next;
+        });
+        console.log(a);
+    });
+    it('Aggregate one', function () {
+        var list = dotNeTS.createList([getFilledList().FirstOrDefault()]);
+        var a = list.Select(function (b) {
+            return b.firstName;
+        }).Aggregate(function (current, next) {
+            return current + ", " + next;
+        });
+        console.log(a);
+    });
+    it('SelectMany', function () {
+        var list = getFilledList();
+        var a = list.SelectMany(function (b) {
+            return b.family;
+        });
+        expect(a.Count()).toBe(3);
+    });
+    it('GroupBy -> SelectMany', function () {
+        var list = getFilledList().GroupBy(function (b) {
+            return b.age;
+        });
+        var a = list.SelectMany(function (b) {
+            return b.ToArray();
+        });
+        expect(a.Count()).toBe(3);
     });
     //it('Group By With String', function () {
     //    timeWatch(function () {

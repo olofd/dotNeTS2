@@ -99,6 +99,9 @@ var dotNeTS;
         };
         Enumerable.prototype.Aggregate = function (callback) {
             var aggregatedResult = null, res;
+            if (this.innerArray.length === 1) {
+                return this.innerArray[0];
+            }
             for (var i = 0; i < this.innerArray.length; i++) {
                 if (i > 0) {
                     aggregatedResult = callback(aggregatedResult || this.innerArray[i - 1], this.innerArray[i], i, this.innerArray);
@@ -264,7 +267,18 @@ var dotNeTS;
         Enumerable.prototype.Select = function (callback) {
             return new Enumerable(_.map(this.innerArray, callback));
         };
-
+        Enumerable.prototype.SelectMany = function (callback) {
+            var array = [];
+            this.ForEach(function (element, index, list) {
+                if (callback !== undefined) {
+                    var res = callback(element, index, list);
+                    if (res !== undefined) {
+                        array = array.concat(res);
+                    }
+                }
+            });
+            return new Enumerable(array);
+        };
         Enumerable.prototype.Where = function (predicate) {
             return this.CopyExpressions(new Enumerable(this.protectedInnerCollection), {
                 func: predicate,
@@ -454,11 +468,11 @@ var dotNeTS;
                         var order = exp.sortOrder;
                         var e1Exp = exp.expression.call(this, e1);
                         var e2Exp = exp.expression.call(this, e2);
-                        if (e1Exp > e2Exp) {
+                        if (e1Exp > e2Exp || e2Exp === null && !(e1Exp === null || e1Exp === undefined)) {
                             sortReturn = order === 0 /* ASC */ ? 1 : -1;
                             return false;
                         }
-                        if (e1Exp < e2Exp) {
+                        if (e1Exp < e2Exp || (e1Exp === null && !(e2Exp === null || e2Exp === undefined))) {
                             sortReturn = order === 0 /* ASC */ ? -1 : 1;
                             return false;
                         }

@@ -57,8 +57,11 @@ module dotNeTS {
             return r;
 
         }
-        Aggregate<TResult>(callback: IAgreggateFunc<TSource, TResult>): TResult {
+        Aggregate(callback: IAgreggateFunc<TSource, TSource>): TSource {
             var aggregatedResult = null, res;
+            if (this.innerArray.length === 1) {
+                return this.innerArray[0];
+            }
             for (var i = 0; i < this.innerArray.length; i++) {
                 if (i > 0) {
                     aggregatedResult = callback(aggregatedResult || this.innerArray[i - 1], this.innerArray[i], i, this.innerArray);
@@ -228,7 +231,19 @@ module dotNeTS {
         Select<TResult>(callback: IFunc<TSource, TResult>): IEnumerable<TResult> {
             return new Enumerable<TResult>(_.map(this.innerArray, callback));
         }
+        SelectMany<TResult>(callback: IFunc<TSource, TResult[]>): IEnumerable<TResult> {
+            var array = [];
+            this.ForEach((element, index, list) => {
+                if (callback !== undefined) {
+                    var res = callback(element, index, list);
+                    if (res !== undefined) {
+                       array = array.concat(res);
+                    }
+                }
 
+            });
+            return new Enumerable<TResult>(array);
+        }
         Where(predicate: IFunc<TSource, boolean>): IEnumerable<TSource> {
             return this.CopyExpressions(new Enumerable<TSource>(this.protectedInnerCollection), {
                 func: predicate,

@@ -59,11 +59,11 @@ var dotNeTS;
                         var order = exp.sortOrder;
                         var e1Exp = exp.expression.call(this, e1);
                         var e2Exp = exp.expression.call(this, e2);
-                        if (e1Exp > e2Exp) {
+                        if (e1Exp > e2Exp || e2Exp === null && !(e1Exp === null || e1Exp === undefined)) {
                             sortReturn = order === 0 /* ASC */ ? 1 : -1;
                             return false;
                         }
-                        if (e1Exp < e2Exp) {
+                        if (e1Exp < e2Exp || (e1Exp === null && !(e2Exp === null || e2Exp === undefined))) {
                             sortReturn = order === 0 /* ASC */ ? -1 : 1;
                             return false;
                         }
