@@ -70,6 +70,51 @@ module dotNeTS {
             return aggregatedResult;
 
         }
+        Sum(selector?: IFunc<TSource, number>): number {
+            var array;
+            if (selector !== undefined) {
+                array = this.Select<number>(selector).ToArray();
+                return array.reduce((a, b) => {
+                    return a + b;
+                });
+            } else {
+                array = (<any>this.innerArray);
+            }
+            if (array !== undefined && array !== null) {
+                var sumArray = _.where(array, b => !!b);
+                var result = (<any>sumArray).reduce((a, b) => {
+                    return a + b;
+                });
+
+                return !isNaN(result) ? result : 0;
+            }
+
+            return 0;
+        }
+        Max(selector?: IFunc<TSource, number>): number {
+            var max;
+            if (selector !== undefined) {
+                max = this.Select(selector).OrderByDecending(b => b).FirstOrDefault();
+            } else {
+                max = this.OrderByDecending(b => b).FirstOrDefault();
+            }
+            if (max !== undefined && max !== null) {
+                return !isNaN(max) ? max : 0;
+            }
+            return 0;
+        }
+        Min(selector?: IFunc<TSource, number>): number {
+            var min;
+            if (selector !== undefined) {
+                min = this.Select(selector).OrderBy(b => b).FirstOrDefault();
+            } else {
+                min = this.OrderBy(b => b).FirstOrDefault();
+            }
+            if (min !== undefined && min !== null) {
+                return !isNaN(min) ? min : 0;
+            }
+            return 0;
+        }
         GroupByNumberKey(callback: IFunc<TSource, number>): IEnumerable<IGrouping<number, TSource>> {
             var listOfGroupings = new List<Grouping<number, TSource>>();
             var grouped = _.groupBy(this.innerArray, callback);

@@ -23,7 +23,9 @@ module dotNeTS {
         Unique<TResult>(callback: IFunc<TSource, TResult>): Array<TResult>;
         Aggregate<TResult>(callback: IAgreggateFunc<TSource, TResult>): TResult;
         SelectMany<TResult>(callback: IFunc<TSource, TResult[]>): IEnumerable<TResult>;
-
+        Sum(selector?: IFunc<TSource, number>): number;
+        Max(selector?: IFunc<TSource, number>): number;
+        Min(selector?: IFunc<TSource, number>): number;
 
 
     }

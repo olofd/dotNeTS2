@@ -391,6 +391,65 @@ describe('Test of List-implementation', function () {
         expect(a.Count()).toBe(3);
 
     });
+    it('Sum', function () {
+        var list = getFilledList();
+        var a = list.Sum(b => b.age);
+        expect(a).toBe(82);
+
+    });
+    it('Sum without callback', function () {
+        var list = dotNeTS.createList<number>([0, 1, 2, 4]);
+        var newList = list.OrderByDecending(b => b);
+        var a = newList.Sum();
+        expect(a).toBe(7);
+
+    });
+    it('Sum with null', function () {
+        var list = dotNeTS.createList<number>([0, null, 2, 4]);
+        var newList = list.OrderByDecending(b => b);
+        var a = newList.Sum();
+        expect(a).toBe(6);
+
+    });
+    it('Sum with undefined', function () {
+        var list = dotNeTS.createList<number>([0, undefined, 2, 4]);
+        var newList = list.OrderByDecending(b => b);
+        var a = newList.Sum();
+        expect(a).toBe(6);
+
+    });
+    it('Min with callback', function () {
+        var list = getFilledList();
+        var a = list.Min(b => b.age);
+        expect(a).toBe(26);
+
+    });
+    it('Min without undefined', function () {
+        var list = dotNeTS.createList<number>([9, 5, 2, 4]);
+        var a = list.Min();
+        expect(a).toBe(2);
+    });
+    it('Min with undefined', function () {
+        var list = dotNeTS.createList<number>([1,undefined, 2, 4]);
+        var a = list.Min();
+        expect(a).toBe(1);
+    });
+    it('Max with callback', function () {
+        var list = getFilledList();
+        var a = list.Max(b => b.age);
+        expect(a).toBe(28);
+
+    });
+    it('Max without undefined', function () {
+        var list = dotNeTS.createList<number>([9, 5, 2, 4]);
+        var a = list.Max();
+        expect(a).toBe(9);
+    });
+    it('Max with undefined', function () {
+        var list = dotNeTS.createList<number>([1, undefined, 2, 4]);
+        var a = list.Max();
+        expect(a).toBe(4);
+    });
     //it('Group By With String', function () {
     //    timeWatch(function () {
     //        var harvestData = getFilledHarvestList();
