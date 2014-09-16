@@ -109,6 +109,61 @@ var dotNeTS;
             }
             return aggregatedResult;
         };
+        Enumerable.prototype.Sum = function (selector) {
+            var array;
+            if (selector !== undefined) {
+                array = this.Select(selector).ToArray();
+                return array.reduce(function (a, b) {
+                    return a + b;
+                });
+            } else {
+                array = this.innerArray;
+            }
+            if (array !== undefined && array !== null) {
+                var sumArray = _.where(array, function (b) {
+                    return !!b;
+                });
+                var result = sumArray.reduce(function (a, b) {
+                    return a + b;
+                });
+
+                return !isNaN(result) ? result : 0;
+            }
+
+            return 0;
+        };
+        Enumerable.prototype.Max = function (selector) {
+            var max;
+            if (selector !== undefined) {
+                max = this.Select(selector).OrderByDecending(function (b) {
+                    return b;
+                }).FirstOrDefault();
+            } else {
+                max = this.OrderByDecending(function (b) {
+                    return b;
+                }).FirstOrDefault();
+            }
+            if (max !== undefined && max !== null) {
+                return !isNaN(max) ? max : 0;
+            }
+            return 0;
+        };
+        Enumerable.prototype.Min = function (selector) {
+            var min;
+            if (selector !== undefined) {
+                min = this.Select(selector).OrderBy(function (b) {
+                    return b;
+                }).FirstOrDefault();
+            } else {
+                min = this.OrderBy(function (b) {
+                    return b;
+                }).FirstOrDefault();
+            }
+            if (min !== undefined && min !== null) {
+                return !isNaN(min) ? min : 0;
+            }
+            return 0;
+        };
         Enumerable.prototype.GroupByNumberKey = function (callback) {
             var listOfGroupings = new dotNeTS.List();
             var grouped = _.groupBy(this.innerArray, callback);
